@@ -1,35 +1,26 @@
+# ============================================================
+# Casa Hidalgo — Configuración Netlify (Next.js)
+# ============================================================
+# Netlify detecta automáticamente Next.js y usa el plugin oficial.
+
 [build]
-  publish = "public"
-  functions = "netlify/functions"
-  command = "node build/inject-env.js"
+  command = "npm run build"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
+  NEXT_TELEMETRY_DISABLED = "1"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+# El plugin de Next.js viene preinstalado en Netlify desde 2024
+# pero lo declaramos explícitamente por claridad.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
-[[redirects]]
-  from = "/webhooks/mercadopago"
-  to = "/.netlify/functions/mp-webhook"
-  status = 200
-  force = true
-
+# Headers de seguridad
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-
-[[headers]]
-  for = "/config.js"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/index.html"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

@@ -1,5 +1,8 @@
 .env
 .env.local
+.next/
+node_modules/
+tsconfig.tsbuildinfo
 public/config.js
 node_modules/
 .netlify/

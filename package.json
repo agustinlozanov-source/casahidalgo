@@ -1,20 +1,31 @@
 {
   "name": "casa-hidalgo",
-  "version": "0.1.0",
-  "description": "Sistema de reservas para Casa Hidalgo — Querétaro",
+  "version": "0.2.0",
   "private": true,
+  "description": "Sistema de reservas para Casa Hidalgo — Querétaro",
   "scripts": {
-    "dev": "netlify dev",
-    "build": "node build/inject-env.js",
-    "deploy": "netlify deploy --prod"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0"
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.4",
+    "next": "^15.3.2",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
   },
   "devDependencies": {
-    "netlify-cli": "^17.0.0"
-  },
-  "engines": {
-    "node": ">=20"
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9",
+    "eslint-config-next": "^15.3.2",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6"
   }
 }

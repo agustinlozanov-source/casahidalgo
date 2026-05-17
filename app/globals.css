@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply bg-paper text-ink antialiased;
+    min-height: 100vh;
+  }
+  body {
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(185,74,44,0.06), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, rgba(74,92,58,0.06), transparent 60%);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-ink-soft/30 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-ink-soft/60; }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium
+           transition-all whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-ink text-paper hover:bg-terra hover:-translate-y-px;
+  }
+  .btn-primary:disabled:hover { @apply transform-none bg-ink; }
+  .btn-terra {
+    @apply bg-terra text-paper hover:bg-terra-deep;
+  }
+  .btn-ghost {
+    @apply bg-transparent border border-strong hover:bg-ink hover:text-paper hover:border-ink;
+  }
+  .btn-large {
+    @apply px-7 py-3.5 text-[14.5px];
+  }
+  .btn-full {
+    @apply w-full justify-center;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-medium;
+  }
+  .pill::before {
+    content: '';
+    @apply w-1.5 h-1.5 rounded-full bg-current;
+  }
+  .pill-confirmed { @apply bg-moss/10 text-moss-deep; }
+  .pill-pending   { @apply bg-gold/20 text-[#8c6a2a]; }
+  .pill-cancelled { @apply bg-terra/10 text-terra-deep; }
+  .pill-completed { @apply bg-ink/10 text-ink-soft; }
+
+  .alert {
+    @apply px-3.5 py-3 rounded-[10px] text-[13.5px] leading-snug;
+  }
+  .alert-error   { @apply bg-error/10 text-error border border-error/20; }
+  .alert-success { @apply bg-success/10 text-success border border-success/20; }
+  .alert-info    { @apply bg-ink/5 text-ink-soft border; }
+
+  .loader {
+    @apply inline-block w-4 h-4 rounded-full border-2 border-paper/30 border-t-paper animate-spin-slow;
+  }
+
+  .form-input {
+    @apply border border-strong bg-bone rounded-[10px] px-3.5 py-3 text-[15px] outline-none
+           transition-all focus:border-ink focus:bg-paper;
+  }
+  .form-label {
+    @apply text-[11.5px] uppercase tracking-[0.12em] text-ink-soft font-medium;
+  }
+}
