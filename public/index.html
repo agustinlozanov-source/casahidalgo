@@ -238,8 +238,9 @@
     padding: 44px; box-shadow: 0 40px 100px rgba(0,0,0,0.4);
     animation: slideUp 0.35s cubic-bezier(0.2,0.8,0.2,1); position: relative;
   }
-  .modal > *:not(.modal-close):not(h3):not(.sub):not(.booking-steps) { flex-shrink: 0; }
-  .modal .modal-body { overflow-y: auto; flex: 1 1 auto; }
+  .modal .modal-body { overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+  .modal-footer { flex-shrink: 0; display:flex; justify-content:space-between; padding-top: 16px; border-top: 1px solid var(--rule); margin-top: 4px; gap: 10px; }
+  .modal-footer.end { justify-content: flex-end; }
   .modal.wide{ max-width: 720px; }
   @media (max-width: 640px){ .modal{ padding: 28px; } }
   @keyframes slideUp{ from{ opacity: 0; transform: translateY(20px); } to{ opacity: 1; transform: translateY(0); } }
@@ -950,6 +951,21 @@ function renderBookingModal(){
         <div class="modal-body">
           ${step===1 ? renderStep1(space) : step===2 ? renderStep2(space) : renderStep3(space)}
         </div>
+        ${step===1 ? `
+          <div class="modal-footer end">
+            <button class="btn btn-primary btn-large" data-action="next-step">Continuar</button>
+          </div>
+        ` : step===2 ? `
+          <div class="modal-footer">
+            <button class="btn btn-ghost" data-action="prev-step">Atrás</button>
+            <button class="btn btn-primary btn-large" data-action="next-step">Continuar</button>
+          </div>
+        ` : `
+          <div class="modal-footer">
+            <button class="btn btn-ghost" data-action="prev-step">Atrás</button>
+            <button class="btn btn-terra btn-large" data-action="confirm-booking" id="confirm-btn">Confirmar reserva</button>
+          </div>
+        `}
       </div>
     </div>
   `;
@@ -975,9 +991,6 @@ function renderStep1(currentSpace){
           </li>
         `).join('')}
       </ul>
-    </div>
-    <div style="display:flex; justify-content:flex-end; margin-top:20px;">
-      <button class="btn btn-primary btn-large" data-action="next-step">Continuar</button>
     </div>
   `;
 }
@@ -1044,10 +1057,6 @@ function renderStep2(space){
       </div>
     ` : ''}
     ${renderSummaryCard(space)}
-    <div style="display:flex; justify-content:space-between; margin-top:20px;">
-      <button class="btn btn-ghost" data-action="prev-step">Atrás</button>
-      <button class="btn btn-primary btn-large" data-action="next-step">Continuar</button>
-    </div>
   `;
 }
 
@@ -1060,10 +1069,6 @@ function renderStep3(space){
     </div>
     <div class="alert alert-info">
       <strong>Demo 2:</strong> La reserva se crea con estado <strong>pendiente de pago</strong>. En el Demo 3 conectamos MercadoPago.
-    </div>
-    <div style="display:flex; justify-content:space-between; margin-top:20px;">
-      <button class="btn btn-ghost" data-action="prev-step">Atrás</button>
-      <button class="btn btn-terra btn-large" data-action="confirm-booking" id="confirm-btn">Confirmar reserva</button>
     </div>
   `;
 }
