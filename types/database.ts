@@ -66,7 +66,7 @@ export interface Booking {
   created_at: string;
   updated_at: string;
   // Cuando hacemos join con spaces
-  spaces?: Pick<Space, 'name' | 'accent_color' | 'base_unit'>;
+  spaces?: Pick<Space, 'name' | 'accent_color' | 'base_unit' | 'capacity'>;
 }
 
 export interface AvailableSlot {
