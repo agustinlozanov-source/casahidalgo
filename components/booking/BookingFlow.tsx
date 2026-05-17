@@ -80,7 +80,7 @@ export default function BookingFlow({ space, profile, userEmail }: Props) {
     const endsAt = new Date(new Date(startsAt).getTime() + durationMs).toISOString();
 
     const payload = {
-      user_id: profile?.id, // Si no hay profile, RLS bloqueará
+      user_id: profile?.id,
       space_id: space.id,
       starts_at: startsAt,
       ends_at: endsAt,
@@ -93,31 +93,36 @@ export default function BookingFlow({ space, profile, userEmail }: Props) {
       tax_cents,
       total_cents,
       status: 'pending' as const,
-      folio: '', // generado por trigger
+      // folio: generado automáticamente por trigger en Supabase, no enviar
     };
 
-    const { data, error } = await supabase
-      .from('bookings')
-      .insert(payload)
-      .select('*, spaces(name, accent_color, base_unit)')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert(payload)
+        .select('*, spaces(name, accent_color, base_unit)')
+        .single();
 
-    setSubmitting(false);
-
-    if (error) {
-      console.error('createBooking error:', error);
-      if (error.code === '23P01' || /overlap|exclude/i.test(error.message)) {
-        setSubmitError('Esa hora ya está reservada. Vuelve al paso anterior y elige otra hora.');
-      } else if (/user_id/i.test(error.message)) {
-        setSubmitError('Hay un problema con tu cuenta. Cierra sesión y vuelve a entrar.');
-      } else {
-        setSubmitError(`Error: ${error.message}`);
+      if (error) {
+        console.error('createBooking error:', error);
+        if (error.code === '23P01' || /overlap|exclude/i.test(error.message)) {
+          setSubmitError('Esa hora ya está reservada. Vuelve al paso anterior y elige otra hora.');
+        } else if (/security|policy|rls/i.test(error.message)) {
+          setSubmitError('Error de permisos. Cierra sesión, vuelve a entrar e intenta de nuevo.');
+        } else {
+          setSubmitError(`Error: ${error.message}`);
+        }
+        return;
       }
-      return;
-    }
 
-    setConfirmedBooking(data as Booking);
-    setStep(4);
+      setConfirmedBooking(data as Booking);
+      setStep(4);
+    } catch (err) {
+      console.error('createBooking exception:', err);
+      setSubmitError('Error de red. Verifica tu conexión e intenta de nuevo.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   // ============================================================
