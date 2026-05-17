@@ -225,6 +225,12 @@
     animation: fadeIn 0.25s ease;
   }
   @keyframes fadeIn{ from{ opacity: 0; } to{ opacity: 1; } }
+  #root {
+    transition: opacity 0.12s ease-out;
+  }
+  #root.rendering {
+    opacity: 0.7;
+  }
   .modal{
     background: var(--paper); border-radius: 24px;
     max-width: 560px; width: 100%; max-height: 92vh; overflow: auto;
@@ -623,16 +629,24 @@ function closeModals(){
 // RENDER
 // ============================================================
 function render(){
-  let html = renderNav();
-  if(state.view === 'home') html += renderHome();
-  else if(state.view === 'mis-reservas') html += renderMyBookings();
+  // Usamos requestAnimationFrame para evitar el flash al re-renderizar.
+  // El navegador agrupa el cambio de DOM en un solo frame.
+  requestAnimationFrame(() => {
+    const scrollY = window.scrollY;  // ← guardar scroll
 
-  if(state.authModal) html += renderAuthModal();
-  if(state.bookingModal) html += state.confirmedBooking ? renderConfirmation() : renderBookingModal();
-  if(state.toast) html += `<div class="toast ${state.toast.type==='error' ? 'toast-error' : ''}">${esc(state.toast.msg)}</div>`;
+    let html = renderNav();
+    if(state.view === 'home') html += renderHome();
+    else if(state.view === 'mis-reservas') html += renderMyBookings();
 
-  root.innerHTML = html;
-  attachListeners();
+    if(state.authModal) html += renderAuthModal();
+    if(state.bookingModal) html += state.confirmedBooking ? renderConfirmation() : renderBookingModal();
+    if(state.toast) html += `<div class="toast ${state.toast.type==='error' ? 'toast-error' : ''}">${esc(state.toast.msg)}</div>`;
+
+    root.innerHTML = html;
+    attachListeners();
+
+    window.scrollTo(0, scrollY);  // ← restaurar scroll
+  });
 }
 
 function renderNav(){
