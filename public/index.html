@@ -489,18 +489,25 @@ async function loadAvailableSlots(spaceId, date){
   state.bookingData.loadingSlots = true;
   state.bookingData.availableSlots = null;
   render();
-  const { data, error } = await supabase.rpc('get_available_slots', {
-    p_space_id: spaceId, p_date: date
-  });
-  state.bookingData.loadingSlots = false;
-  if(error){
-    console.error('get_available_slots error:', error);
-    showToast(`Error: ${error.message}`, 'error');
+  try {
+    const { data, error } = await supabase.rpc('get_available_slots', {
+      p_space_id: spaceId, p_date: date
+    });
+    if(error){
+      console.error('get_available_slots error:', error);
+      showToast(`Error cargando disponibilidad: ${error.message}`, 'error');
+      state.bookingData.availableSlots = [];
+    } else {
+      state.bookingData.availableSlots = data || [];
+    }
+  } catch(err) {
+    console.error('loadAvailableSlots exception:', err);
+    showToast('Error de red al consultar disponibilidad', 'error');
     state.bookingData.availableSlots = [];
-  } else {
-    state.bookingData.availableSlots = data || [];
+  } finally {
+    state.bookingData.loadingSlots = false;
+    render();
   }
-  render();
 }
 
 // ============================================================
@@ -525,6 +532,9 @@ async function signInWithMagicLink(email){
 }
 async function signOut(){
   await supabase.auth.signOut();
+  state.session = null;
+  state.profile = null;
+  state.myBookings = [];
   state.view = 'home';
   showToast('Sesión cerrada');
 }
@@ -1132,6 +1142,7 @@ async function handleAction(action, el, ev){
     case 'go-mis-reservas':
       closeModals();
       state.view = 'mis-reservas';
+      render(); // respuesta visual inmediata al primer clic
       await loadMyBookings();
       render();
       break;
