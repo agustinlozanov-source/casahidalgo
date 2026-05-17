@@ -40,6 +40,8 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(null);
+  const [redirectingToPayment, setRedirectingToPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const { subtotal_cents, tax_cents, total_cents } = calculatePrice(space, hours);
 
@@ -135,6 +137,29 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
     }
   }
 
+  async function handlePayWithMP() {
+    if (!confirmedBooking) return;
+    setRedirectingToPayment(true);
+    setPaymentError(null);
+    try {
+      const res = await fetch('/api/checkout/create-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: confirmedBooking.id }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Error al crear preferencia de pago');
+      // En producción usa init_point, en sandbox usa sandbox_init_point
+      const url = process.env.NODE_ENV === 'production'
+        ? json.init_point
+        : (json.sandbox_init_point || json.init_point);
+      window.location.href = url;
+    } catch (err) {
+      setPaymentError(err instanceof Error ? err.message : 'Error al conectar con MercadoPago');
+      setRedirectingToPayment(false);
+    }
+  }
+
   // ============================================================
   // RENDER: CONFIRMACIÓN
   // ============================================================
@@ -172,13 +197,31 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
           <SummaryRow label="Total" value={formatMoney(confirmedBooking.total_cents)} total />
         </div>
 
-        <div className="alert alert-info my-5">
-          <strong>Próximo paso:</strong> en la Fase 3 se conecta MercadoPago. Por ahora la reserva queda <strong>pendiente de pago</strong>.
-        </div>
+        {paymentError && (
+          <div className="alert alert-error my-4">{paymentError}</div>
+        )}
 
-        <div className="flex gap-2.5">
-          <Link href="/" className="btn btn-ghost btn-full">Cerrar</Link>
-          <Link href="/mis-reservas" className="btn btn-primary btn-full">Ver mis reservas</Link>
+        <button
+          onClick={handlePayWithMP}
+          disabled={redirectingToPayment}
+          className="btn btn-terra btn-full mt-5 flex items-center justify-center gap-2.5"
+        >
+          {redirectingToPayment ? (
+            <><span className="loader" /> Redirigiendo a MercadoPago…</>
+          ) : (
+            <>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" />
+                <path d="M1 10h22" />
+              </svg>
+              Pagar con MercadoPago
+            </>
+          )}
+        </button>
+
+        <div className="flex gap-2.5 mt-2.5">
+          <Link href="/" className="btn btn-ghost btn-full">Pagar después</Link>
+          <Link href="/mis-reservas" className="btn btn-ghost btn-full">Ver mis reservas</Link>
         </div>
       </div>
     );
@@ -472,7 +515,7 @@ function Step3({
       </div>
 
       <div className="alert alert-info">
-        <strong>Estado de la reserva:</strong> quedará como <strong>pendiente de pago</strong>. En la Fase 3 conectamos MercadoPago para cobrar automáticamente.
+        Al confirmar se creará tu reserva y serás redirigido a <strong>MercadoPago</strong> para completar el pago de forma segura.
       </div>
 
       {submitError && <div className="alert alert-error mt-3">{submitError}</div>}
