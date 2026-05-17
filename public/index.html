@@ -587,8 +587,7 @@ async function createBooking(){
     customer_phone: state.profile?.phone || 'sin-telefono',
     notes: notes || null,
     subtotal_cents, tax_cents, total_cents,
-    status: 'pending',
-    folio: ''
+    status: 'pending'
   };
 
   const { data, error } = await supabase
@@ -638,11 +637,14 @@ function closeModals(){
 // ============================================================
 // RENDER
 // ============================================================
+let _pendingRaf = null;
 function render(){
-  // Usamos requestAnimationFrame para evitar el flash al re-renderizar.
-  // El navegador agrupa el cambio de DOM en un solo frame.
-  requestAnimationFrame(() => {
-    const scrollY = window.scrollY;  // ← guardar scroll
+  // Cancelamos cualquier frame pendiente: si render() se llama varias veces
+  // antes del próximo frame, solo se ejecuta la última versión (sin flash doble).
+  if(_pendingRaf) cancelAnimationFrame(_pendingRaf);
+  _pendingRaf = requestAnimationFrame(() => {
+    _pendingRaf = null;
+    const scrollY = window.scrollY;
 
     let html = renderNav();
     if(state.view === 'home') html += renderHome();
@@ -655,7 +657,7 @@ function render(){
     root.innerHTML = html;
     attachListeners();
 
-    window.scrollTo(0, scrollY);  // ← restaurar scroll
+    window.scrollTo(0, scrollY);
   });
 }
 
