@@ -30,17 +30,6 @@ export default function AdminTopbar() {
         </h1>
       </div>
       <div className="flex items-center gap-3">
-        <div className="hidden md:flex items-center gap-2.5 bg-stone rounded-full px-4 py-2 text-sm text-ink-soft w-[280px]">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="7" />
-            <path d="M21 21l-4-4" />
-          </svg>
-          <input
-            placeholder="Buscar…"
-            className="flex-1 bg-transparent border-0 outline-none text-sm"
-          />
-          <span className="font-mono text-[11px] opacity-50">⌘K</span>
-        </div>
       </div>
     </div>
   );

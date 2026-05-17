@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -29,20 +29,25 @@ export default function ReservasTable({
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
+  // Búsqueda reactiva: navega automáticamente 350ms después de dejar de escribir
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (currentStatus !== 'all') params.set('status', currentStatus);
+      if (searchInput.trim()) params.set('q', searchInput.trim());
+      const qs = params.toString();
+      startTransition(() => {
+        router.push(`/admin/reservas${qs ? '?' + qs : ''}`);
+      });
+    }, 350);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
   function changeFilter(status: string) {
     const params = new URLSearchParams();
     if (status !== 'all') params.set('status', status);
     if (currentSearch) params.set('q', currentSearch);
-    startTransition(() => {
-      router.push(`/admin/reservas${params.toString() ? '?' + params.toString() : ''}`);
-    });
-  }
-
-  function applySearch(e: React.FormEvent) {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (currentStatus !== 'all') params.set('status', currentStatus);
-    if (searchInput.trim()) params.set('q', searchInput.trim());
     startTransition(() => {
       router.push(`/admin/reservas${params.toString() ? '?' + params.toString() : ''}`);
     });
@@ -140,8 +145,8 @@ export default function ReservasTable({
         </div>
 
         <div className="flex gap-2 items-center">
-          <form onSubmit={applySearch} className="flex items-center gap-2 bg-bone border rounded-full px-3.5 py-2 text-sm w-[260px]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-soft">
+          <div className="flex items-center gap-2 bg-bone border rounded-full px-3.5 py-2 text-sm w-[260px]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-soft flex-shrink-0">
               <circle cx="11" cy="11" r="7" />
               <path d="M21 21l-4-4" />
             </svg>
@@ -151,7 +156,18 @@ export default function ReservasTable({
               placeholder="Folio, cliente, email…"
               className="flex-1 bg-transparent border-0 outline-none text-sm"
             />
-          </form>
+            {searchInput && (
+              <button
+                onClick={() => setSearchInput('')}
+                className="text-ink-soft hover:text-ink transition-colors flex-shrink-0"
+                aria-label="Limpiar búsqueda"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            )}
+          </div>
           <button onClick={handleExport} className="btn btn-ghost text-xs py-2 px-3.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
