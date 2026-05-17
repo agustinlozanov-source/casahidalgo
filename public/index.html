@@ -243,6 +243,7 @@
   .modal.wide{ max-width: 720px; }
   @media (max-width: 640px){ .modal{ padding: 28px; } }
   @keyframes slideUp{ from{ opacity: 0; transform: translateY(20px); } to{ opacity: 1; transform: translateY(0); } }
+  .no-anim { animation: none !important; }
   .modal-close{
     position: absolute; top: 18px; right: 18px;
     width: 36px; height: 36px; border-radius: 50%;
@@ -488,7 +489,9 @@ async function loadMyBookings(){
   state.myBookings = data || [];
 }
 
+let _slotsGen = 0;
 async function loadAvailableSlots(spaceId, date){
+  const gen = ++_slotsGen;
   state.bookingData.loadingSlots = true;
   state.bookingData.availableSlots = null;
   render();
@@ -496,6 +499,7 @@ async function loadAvailableSlots(spaceId, date){
     const { data, error } = await supabase.rpc('get_available_slots', {
       p_space_id: spaceId, p_date: date
     });
+    if(gen !== _slotsGen) return; // respuesta tardía de llamada anterior, ignorar
     if(error){
       console.error('get_available_slots error:', error);
       showToast(`Error cargando disponibilidad: ${error.message}`, 'error');
@@ -504,12 +508,15 @@ async function loadAvailableSlots(spaceId, date){
       state.bookingData.availableSlots = data || [];
     }
   } catch(err) {
+    if(gen !== _slotsGen) return;
     console.error('loadAvailableSlots exception:', err);
     showToast('Error de red al consultar disponibilidad', 'error');
     state.bookingData.availableSlots = [];
   } finally {
-    state.bookingData.loadingSlots = false;
-    render();
+    if(gen === _slotsGen){
+      state.bookingData.loadingSlots = false;
+      render();
+    }
   }
 }
 
@@ -642,12 +649,12 @@ function closeModals(){
 // ============================================================
 let _pendingRaf = null;
 function render(){
-  // Cancelamos cualquier frame pendiente: si render() se llama varias veces
-  // antes del próximo frame, solo se ejecuta la última versión (sin flash doble).
   if(_pendingRaf) cancelAnimationFrame(_pendingRaf);
   _pendingRaf = requestAnimationFrame(() => {
     _pendingRaf = null;
     const scrollY = window.scrollY;
+    // Si el modal ya estaba abierto, no re-disparamos la animación
+    state._modalWasOpen = !!root.querySelector('.modal-overlay');
 
     let html = renderNav();
     if(state.view === 'home') html += renderHome();
@@ -917,9 +924,10 @@ function renderBookingModal(){
   const space = state.spaces.find(s => s.id === state.bookingData.spaceId);
   if(!space) return '';
   const step = state.bookingStep;
+  const na = state._modalWasOpen ? 'no-anim' : '';
   return `
-    <div class="modal-overlay" data-close-overlay>
-      <div class="modal wide" data-stop>
+    <div class="modal-overlay ${na}" data-close-overlay>
+      <div class="modal wide ${na}" data-stop>
         <button class="modal-close" data-action="close-modal">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
