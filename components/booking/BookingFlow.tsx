@@ -20,10 +20,11 @@ type Step = 1 | 2 | 3 | 4; // 4 = confirmación
 interface Props {
   space: Space;
   profile: Profile | null;
+  userId: string;
   userEmail: string;
 }
 
-export default function BookingFlow({ space, profile, userEmail }: Props) {
+export default function BookingFlow({ space, profile, userId, userEmail }: Props) {
   const router = useRouter();
   const supabase = createClient();
   const isCoworking = space.pricing_model === 'daily';
@@ -89,7 +90,7 @@ export default function BookingFlow({ space, profile, userEmail }: Props) {
     const endsAt = new Date(new Date(startsAt).getTime() + durationMs).toISOString();
 
     const payload = {
-      user_id: profile?.id,
+      user_id: userId, // Siempre disponible desde la sesión
       space_id: space.id,
       starts_at: startsAt,
       ends_at: endsAt,

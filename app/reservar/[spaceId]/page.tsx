@@ -49,6 +49,7 @@ export default async function ReservarPage({
         <BookingFlow
           space={space as Space}
           profile={profile as Profile | null}
+          userId={user.id}
           userEmail={user.email!}
         />
       </main>
