@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -43,32 +43,41 @@ export default function BookingFlow({ space, profile, userEmail }: Props) {
   const { subtotal_cents, tax_cents, total_cents } = calculatePrice(space, hours);
 
   // Cargar slots cuando entras al paso 2 o cambias fecha
-  const loadSlots = useCallback(
-    async (forDate: string) => {
-      if (isCoworking) return; // coworking no necesita slots
+  useEffect(() => {
+    // Solo cargar si estamos en paso 2 y NO es coworking
+    if (step !== 2 || isCoworking) return;
+
+    let cancelled = false;
+
+    async function loadSlots() {
       setSlotsLoading(true);
       setSlotsError(null);
+      console.log('[BookingFlow] Cargando slots para', space.id, date);
+
       const { data, error } = await supabase.rpc('get_available_slots', {
         p_space_id: space.id,
-        p_date: forDate,
+        p_date: date,
       });
+
+      if (cancelled) return;
+
       setSlotsLoading(false);
+
       if (error) {
-        console.error('get_available_slots error:', error);
+        console.error('[BookingFlow] get_available_slots error:', error);
         setSlotsError(error.message);
         setSlots([]);
       } else {
+        console.log('[BookingFlow] Slots recibidos:', data);
         setSlots((data || []) as AvailableSlot[]);
       }
-    },
-    [supabase, space.id, isCoworking]
-  );
-
-  useEffect(() => {
-    if (step === 2 && !isCoworking) {
-      loadSlots(date);
     }
-  }, [step, date, loadSlots, isCoworking]);
+
+    loadSlots();
+
+    // Cleanup: si el componente se desmonta o cambia la fecha, cancelar
+    return () => { cancelled = true; };
+  }, [step, date, isCoworking, space.id, supabase]);
 
   async function handleConfirm() {
     setSubmitting(true);
@@ -206,10 +215,7 @@ export default function BookingFlow({ space, profile, userEmail }: Props) {
           slotsLoading={slotsLoading}
           slotsError={slotsError}
           subtotalLabel={formatMoney(subtotal_cents)}
-          onDateChange={(d) => {
-            setDate(d);
-            // los slots se cargan automáticamente por useEffect
-          }}
+          onDateChange={setDate}
           onTimeChange={setTime}
           onHoursChange={setHours}
           onBack={() => setStep(1)}
