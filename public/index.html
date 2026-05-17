@@ -633,7 +633,8 @@ function openBooking(spaceId){
   };
   state.confirmedBooking = null;
   render();
-  loadAvailableSlots(spaceId, todayPlus(1));
+  // No precargamos slots aquí: solo se necesitan en step 2.
+  // Cargarlos en step 1 causa race condition con la carga de step 2.
 }
 
 function closeModals(){
