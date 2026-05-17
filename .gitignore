@@ -1,0 +1,10 @@
+.env
+.env.local
+public/config.js
+node_modules/
+.netlify/
+dist/
+*.log
+.DS_Store
+.vscode/
+.idea/

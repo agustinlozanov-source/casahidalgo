@@ -1,0 +1,20 @@
+{
+  "name": "casa-hidalgo",
+  "version": "0.1.0",
+  "description": "Sistema de reservas para Casa Hidalgo — Querétaro",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "node build/inject-env.js",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

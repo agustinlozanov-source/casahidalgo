@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Casa Hidalgo — Espacios Querétaro</title>
+<meta name="description" content="Espacios profesionales para reuniones, contenido y coworking en el Centro Histórico de Querétaro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --stone: #ece5d8;
+    --stone-2: #ddd2bd;
+    --bone: #f6f1e6;
+    --ink: #1d1916;
+    --ink-soft: #3a342d;
+    --terra: #b94a2c;
+    --terra-deep: #8c3520;
+    --moss: #4a5c3a;
+    --moss-deep: #34452a;
+    --gold: #c69748;
+    --paper: #faf6ec;
+    --line: rgba(29,25,22,0.12);
+    --line-strong: rgba(29,25,22,0.25);
+    --error: #c43c2a;
+    --success: #4a5c3a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  body{
+    background-image:
+      radial-gradient(1200px 600px at 80% -10%, rgba(185,74,44,0.06), transparent 60%),
+      radial-gradient(900px 500px at -10% 30%, rgba(74,92,58,0.06), transparent 60%);
+  }
+  .serif{ font-family: 'Fraunces', serif; }
+  .mono{ font-family: 'JetBrains Mono', monospace; }
+  button{ font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input{ font-family: inherit; color: inherit; }
+
+  .btn{
+    padding: 11px 22px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid transparent;
+  }
+  .btn-primary{ background: var(--ink); color: var(--paper); }
+  .btn-primary:hover{ background: var(--terra); transform: translateY(-1px); }
+  .btn-ghost{ background: transparent; color: var(--ink); border-color: var(--line-strong); }
+  .btn-ghost:hover{ background: var(--ink); color: var(--paper); }
+  .btn-large{ padding: 14px 28px; font-size: 14.5px; width: 100%; justify-content: center; }
+  .btn:disabled{ opacity: 0.5; cursor: not-allowed; }
+
+  /* ========== CONFIG ERROR ========== */
+  .config-error{
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 40px;
+    background: var(--bone);
+    border: 2px solid var(--error);
+    border-radius: 16px;
+  }
+  .config-error h2{
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    margin-bottom: 16px;
+    color: var(--error);
+  }
+  .config-error pre{
+    background: var(--ink);
+    color: var(--paper);
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+
+  /* ========== LOGIN SCREEN ========== */
+  .login-wrap{
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 880px){ .login-wrap{ grid-template-columns: 1fr; } }
+
+  .login-art{
+    background: linear-gradient(135deg, #2a201a 0%, #3a2e22 100%);
+    color: var(--paper);
+    padding: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  @media (max-width: 880px){ .login-art{ display: none; } }
+  .login-art::before{
+    content:"";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(800px 400px at 80% 90%, rgba(198,151,72,0.18), transparent 60%),
+      radial-gradient(600px 400px at 10% 20%, rgba(185,74,44,0.15), transparent 60%);
+  }
+  .login-art > * { position: relative; z-index: 1; }
+  .art-logo{
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .art-logo .mark{
+    width: 36px; height: 36px;
+    background: var(--paper); color: var(--ink);
+    border-radius: 6px;
+    display: grid; place-items: center;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 19px;
+  }
+  .art-quote{
+    font-family: 'Fraunces', serif;
+    font-weight: 350;
+    font-size: 40px;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+  }
+  .art-quote em{ font-style: italic; color: var(--gold); }
+  .art-meta{
+    display: flex; gap: 36px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(246,241,230,0.15);
+  }
+  .art-meta .label{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: rgba(246,241,230,0.55);
+    margin-bottom: 6px;
+  }
+  .art-meta .value{
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+  }
+
+  .login-form-side{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  .login-form{
+    width: 100%;
+    max-width: 420px;
+  }
+  .login-form h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 350;
+    font-size: 42px;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin-bottom: 12px;
+  }
+  .login-form h1 em{ font-style: italic; color: var(--terra); }
+  .login-form .lead{
+    color: var(--ink-soft);
+    font-size: 15px;
+    margin-bottom: 36px;
+  }
+  .form-row{ display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .form-row label{
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .form-row input{
+    border: 1px solid var(--line-strong);
+    background: var(--bone);
+    border-radius: 10px;
+    padding: 13px 14px;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .form-row input:focus{
+    border-color: var(--ink);
+    background: var(--paper);
+  }
+  .alert{
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.4;
+  }
+  .alert-error{
+    background: rgba(196,60,42,0.08);
+    color: var(--error);
+    border: 1px solid rgba(196,60,42,0.2);
+  }
+  .alert-success{
+    background: rgba(74,92,58,0.08);
+    color: var(--success);
+    border: 1px solid rgba(74,92,58,0.2);
+  }
+  .alert-info{
+    background: rgba(29,25,22,0.04);
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+  }
+  .loader{
+    width: 16px; height: 16px;
+    border: 2px solid rgba(246,241,230,0.3);
+    border-top-color: var(--paper);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  /* ========== DASHBOARD ========== */
+  .nav{
+    backdrop-filter: blur(14px);
+    background: rgba(250,246,236,0.85);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 36px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-logo{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo .mark{
+    width: 30px; height: 30px;
+    background: var(--ink); color: var(--paper);
+    display: grid; place-items: center;
+    border-radius: 4px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 17px;
+  }
+  .nav-user{
+    display: flex; align-items: center; gap: 14px;
+    font-size: 13.5px;
+  }
+  .nav-user .avatar{
+    width: 36px; height: 36px;
+    background: var(--ink); color: var(--paper);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: 'Fraunces', serif;
+    font-size: 13px;
+  }
+  .nav-user .who .name{ font-weight: 500; }
+  .nav-user .who .role{ font-size: 11.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.1em; }
+  .role-admin{ color: var(--terra) !important; }
+
+  main{
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 50px 36px 80px;
+  }
+  .page-head{ margin-bottom: 50px; }
+  .page-head .crumb{
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+  .page-head h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 350;
+    font-size: clamp(36px, 4.5vw, 58px);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+  .page-head h1 em{ font-style: italic; color: var(--terra); }
+  .page-head p{
+    color: var(--ink-soft);
+    font-size: 16px;
+    margin-top: 14px;
+    max-width: 560px;
+    line-height: 1.55;
+  }
+
+  .status-bar{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+  }
+  .status-pill{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bone);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px 6px 8px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .status-pill .dot{
+    width: 8px; height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(74,92,58,0.18);
+  }
+  .status-pill.error .dot{ background: var(--error); box-shadow: 0 0 0 3px rgba(196,60,42,0.18); }
+  .status-pill .key{ font-family: 'JetBrains Mono', monospace; color: var(--ink); }
+
+  .spaces-grid{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+  }
+  @media (max-width: 980px){ .spaces-grid{ grid-template-columns: 1fr; } }
+
+  .space-card{
+    background: var(--bone);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s;
+  }
+  .space-card:hover{
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -20px rgba(29,25,22,0.18);
+  }
+  .space-card.terra{ --accent: var(--terra); }
+  .space-card.blue{ --accent: #2c5e8e; }
+  .space-card.moss{ --accent: var(--moss); }
+  .space-tag{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .space-tag::before{ content:""; width: 20px; height: 1px; background: var(--accent); }
+  .space-card h3{
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .space-card .desc{
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 24px;
+  }
+  .space-card .features{
+    list-style: none;
+    display: flex; flex-direction: column; gap: 7px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+    flex: 1;
+  }
+  .space-card .features li{
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .space-card .features li::before{
+    content:"";
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+  .space-card .meta{
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+  .space-card .price .num{
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .space-card .price .unit{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+  }
+  .space-card .cap{
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+  }
+
+  .empty{
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-soft);
+  }
+
+  .debug{
+    margin-top: 60px;
+    padding: 24px;
+    background: var(--ink);
+    color: rgba(246,241,230,0.85);
+    border-radius: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .debug h4{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--paper);
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+  .debug-row{
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 16px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(246,241,230,0.08);
+  }
+  .debug-row:last-child{ border-bottom: none; }
+  .debug-row .k{ color: rgba(246,241,230,0.5); }
+  .debug-row .v{ word-break: break-all; }
+  .debug-row .v.ok{ color: #8bc18f; }
+  .debug-row .v.fail{ color: #e08070; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!--
+  CONFIG INJECTION
+  ================
+  Las credenciales públicas se cargan desde /config.js
+  En local: viene del archivo public/config.local.js (que NO se sube a git)
+  En Netlify: se genera dinámicamente con variables de entorno (ver netlify.toml)
+-->
+<script src="/config.js"></script>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// ============================================================
+// CONFIGURACIÓN
+// ============================================================
+const config = window.__APP_CONFIG__;
+
+if(!config || !config.SUPABASE_URL || !config.SUPABASE_ANON_KEY ||
+   config.SUPABASE_URL.includes('PLACEHOLDER') || config.SUPABASE_ANON_KEY.includes('PLACEHOLDER')){
+  document.getElementById('root').innerHTML = `
+    <div class="config-error">
+      <h2>⚠ Configuración faltante</h2>
+      <p style="color: var(--ink-soft); margin-bottom: 16px;">
+        Las credenciales de Supabase no están configuradas. Crea el archivo
+        <code>public/config.local.js</code> con el siguiente contenido:
+      </p>
+      <pre>window.__APP_CONFIG__ = {
+  SUPABASE_URL: 'https://tu-proyecto.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGc...'
+};</pre>
+      <p style="color: var(--ink-soft); font-size: 13px;">
+        En producción, Netlify inyecta estas variables desde los Environment Variables del dashboard.
+      </p>
+    </div>
+  `;
+  throw new Error('Missing config');
+}
+
+const supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  session: null,
+  profile: null,
+  spaces: [],
+  loading: false,
+  error: null,
+  debugInfo: {
+    connectionTest: 'pending',
+    spacesQueryTime: null,
+    profileQueryTime: null
+  }
+};
+
+const root = document.getElementById('root');
+
+// ============================================================
+// UTILS
+// ============================================================
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials = (name) => {
+  const parts = (name || '').trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[parts.length-1]?.[0] || '')).toUpperCase() || '?';
+};
+
+// ============================================================
+// AUTH FLOW
+// ============================================================
+async function init(){
+  const { error: connError } = await supabase.from('spaces').select('id').limit(1);
+  state.debugInfo.connectionTest = connError ? `fail: ${connError.message}` : 'ok';
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if(session){
+    state.session = session;
+    await loadProfile();
+    await loadSpaces();
+    renderDashboard();
+  } else {
+    renderLogin();
+  }
+
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    state.session = session;
+    if(session){
+      await loadProfile();
+      await loadSpaces();
+      renderDashboard();
+    } else {
+      state.profile = null;
+      state.spaces = [];
+      renderLogin();
+    }
+  });
+}
+
+async function loadProfile(){
+  if(!state.session) return;
+  const t0 = performance.now();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, role, phone, avatar_initials')
+    .eq('id', state.session.user.id)
+    .single();
+  state.debugInfo.profileQueryTime = Math.round(performance.now() - t0);
+  if(error){
+    console.error('loadProfile error:', error);
+    state.error = `No se pudo cargar el perfil: ${error.message}`;
+  } else {
+    state.profile = data;
+  }
+}
+
+async function loadSpaces(){
+  const t0 = performance.now();
+  const { data, error } = await supabase
+    .from('spaces')
+    .select('*')
+    .eq('is_active', true)
+    .order('display_order');
+  state.debugInfo.spacesQueryTime = Math.round(performance.now() - t0);
+  if(error){
+    console.error('loadSpaces error:', error);
+    state.error = `Error cargando espacios: ${error.message}`;
+  } else {
+    state.spaces = data;
+  }
+}
+
+async function handleLogin(email, password){
+  state.loading = true;
+  state.error = null;
+  renderLogin();
+
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  state.loading = false;
+  if(error){
+    state.error = traduceError(error.message);
+    renderLogin();
+  }
+}
+
+async function handleLogout(){
+  await supabase.auth.signOut();
+}
+
+function traduceError(msg){
+  if(/invalid login credentials/i.test(msg)) return 'Email o contraseña incorrectos.';
+  if(/email not confirmed/i.test(msg)) return 'Tu email aún no ha sido confirmado.';
+  if(/network/i.test(msg)) return 'Error de conexión. Verifica tu internet.';
+  return msg;
+}
+
+// ============================================================
+// RENDER: LOGIN
+// ============================================================
+function renderLogin(){
+  root.innerHTML = `
+    <div class="login-wrap">
+      <aside class="login-art">
+        <div class="art-logo">
+          <span class="mark serif">H</span>
+          Casa Hidalgo
+        </div>
+        <div>
+          <div class="art-quote">
+            Espacios que <em>respiran</em><br/>
+            historia.<br/>
+            Diseñados para <em>trabajar</em>.
+          </div>
+        </div>
+        <div class="art-meta">
+          <div>
+            <div class="label">Ubicación</div>
+            <div class="value serif">Centro · Qro</div>
+          </div>
+          <div>
+            <div class="label">Espacios</div>
+            <div class="value serif">3 disponibles</div>
+          </div>
+          <div>
+            <div class="label">Horario</div>
+            <div class="value serif">10—17h</div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="login-form-side">
+        <div class="login-form">
+          <h1 class="serif">Volver<br/>a <em>Casa</em>.</h1>
+          <p class="lead">Ingresa con tu correo para gestionar tus reservas y acceder al panel.</p>
+
+          ${state.error ? `<div class="alert alert-error">⚠ ${escapeHtml(state.error)}</div>` : ''}
+
+          <form id="login-form" autocomplete="on">
+            <div class="form-row">
+              <label for="email">Correo electrónico</label>
+              <input id="email" name="email" type="email" required placeholder="tu@correo.com" autocomplete="email"/>
+            </div>
+            <div class="form-row">
+              <label for="password">Contraseña</label>
+              <input id="password" name="password" type="password" required placeholder="••••••••" autocomplete="current-password"/>
+            </div>
+            <button type="submit" class="btn btn-primary btn-large" ${state.loading ? 'disabled' : ''}>
+              ${state.loading ? '<span class="loader"></span> Verificando…' : 'Iniciar sesión'}
+            </button>
+          </form>
+
+          <div class="alert alert-info" style="margin-top: 24px; font-size: 12px;">
+            <div>
+              <strong>Demo 1 — Login + Espacios</strong><br/>
+              Usa el email del usuario admin que creaste en Supabase. La autenticación es real contra tu base de datos.
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
+
+  document.getElementById('login-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    handleLogin(fd.get('email'), fd.get('password'));
+  });
+}
+
+// ============================================================
+// RENDER: DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const isAdmin = state.profile?.role === 'admin' || state.profile?.role === 'staff';
+  const userName = state.profile?.full_name || state.session?.user?.email || 'Usuario';
+  const userRole = state.profile?.role || 'customer';
+
+  root.innerHTML = `
+    <nav class="nav">
+      <div class="nav-logo">
+        <span class="mark">H</span>
+        Casa Hidalgo
+      </div>
+      <div class="nav-user">
+        ${isAdmin ? '<button class="btn btn-ghost" id="btn-admin">Panel admin →</button>' : ''}
+        <div class="who">
+          <div class="name">${escapeHtml(userName)}</div>
+          <div class="role ${userRole==='admin' ? 'role-admin' : ''}">${escapeHtml(userRole)}</div>
+        </div>
+        <div class="avatar serif">${escapeHtml(state.profile?.avatar_initials || initials(userName))}</div>
+        <button class="btn btn-ghost" id="btn-logout">Salir</button>
+      </div>
+    </nav>
+
+    <main>
+      <div class="page-head">
+        <div class="crumb">Demo 1 · Login + Espacios desde Supabase</div>
+        <h1 class="serif">Conectado a tu <em>base de datos</em> real.</h1>
+        <p>Los datos que ves abajo vienen directamente de tu instancia de Supabase. La autenticación, RLS y carga de espacios están funcionando.</p>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-pill ${state.debugInfo.connectionTest === 'ok' ? '' : 'error'}">
+          <span class="dot"></span>
+          <span>Conexión Supabase: <span class="key">${state.debugInfo.connectionTest}</span></span>
+        </div>
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span>Profile cargado: <span class="key">${state.debugInfo.profileQueryTime}ms</span></span>
+        </div>
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span>Espacios cargados: <span class="key">${state.spaces.length} · ${state.debugInfo.spacesQueryTime}ms</span></span>
+        </div>
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span>Rol: <span class="key">${escapeHtml(userRole)}</span></span>
+        </div>
+      </div>
+
+      ${state.error ? `<div class="alert alert-error">${escapeHtml(state.error)}</div>` : ''}
+
+      <div class="spaces-grid">
+        ${state.spaces.length === 0 ? '<div class="empty">No hay espacios disponibles.</div>' : state.spaces.map(renderSpaceCard).join('')}
+      </div>
+
+      <div class="debug">
+        <h4>🔧 Información de debug (visible solo en demo)</h4>
+        <div class="debug-row">
+          <span class="k">Supabase URL</span>
+          <span class="v">${config.SUPABASE_URL}</span>
+        </div>
+        <div class="debug-row">
+          <span class="k">User ID</span>
+          <span class="v">${state.session?.user?.id}</span>
+        </div>
+        <div class="debug-row">
+          <span class="k">Email</span>
+          <span class="v">${state.session?.user?.email}</span>
+        </div>
+        <div class="debug-row">
+          <span class="k">Sesión expira</span>
+          <span class="v">${state.session?.expires_at ? new Date(state.session.expires_at * 1000).toLocaleString('es-MX') : '—'}</span>
+        </div>
+        <div class="debug-row">
+          <span class="k">RLS test (spaces SELECT)</span>
+          <span class="v ${state.debugInfo.connectionTest === 'ok' ? 'ok' : 'fail'}">${state.debugInfo.connectionTest === 'ok' ? 'PASS — política spaces_select_all funciona' : 'FAIL'}</span>
+        </div>
+        <div class="debug-row">
+          <span class="k">RLS test (profile SELECT)</span>
+          <span class="v ${state.profile ? 'ok' : 'fail'}">${state.profile ? 'PASS — política profiles_select_own funciona' : 'FAIL — profile no encontrado'}</span>
+        </div>
+      </div>
+    </main>
+  `;
+
+  document.getElementById('btn-logout')?.addEventListener('click', handleLogout);
+  document.getElementById('btn-admin')?.addEventListener('click', () => {
+    alert('Panel admin: lo construimos en el siguiente demo 🛠️');
+  });
+}
+
+function renderSpaceCard(s){
+  const features = Array.isArray(s.features) ? s.features : [];
+  const accentClass = s.accent_color || 'terra';
+  return `
+    <article class="space-card ${escapeHtml(accentClass)}">
+      <div class="space-tag">${escapeHtml(s.tag)}</div>
+      <h3 class="serif">${escapeHtml(s.name)}</h3>
+      <p class="desc">${escapeHtml(s.description)}</p>
+      <ul class="features">
+        ${features.slice(0, 5).map(f => `<li>${escapeHtml(f)}</li>`).join('')}
+      </ul>
+      <div class="meta">
+        <div class="price">
+          <div class="num serif">$${s.base_price}<span style="font-size:13px; color:var(--ink-soft); font-family:Inter;"> mxn</span></div>
+          <div class="unit">${escapeHtml(s.base_unit)}</div>
+        </div>
+        <div class="cap">Cap. ${s.capacity}</div>
+      </div>
+    </article>
+  `;
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+init().catch(err => {
+  console.error('Boot error:', err);
+  root.innerHTML = `
+    <div style="padding: 40px; text-align: center;">
+      <h2 style="font-family: Fraunces, serif;">Error inicial</h2>
+      <p style="color: var(--ink-soft); margin-top: 12px;">${escapeHtml(err.message)}</p>
+    </div>
+  `;
+});
+</script>
+</body>
+</html>
