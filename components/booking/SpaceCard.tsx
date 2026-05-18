@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Space } from '@/types/database';
 
 const accentClasses = {
@@ -13,16 +14,37 @@ const dotClasses = {
   moss:  'bg-moss',
 } as const;
 
+// Imagen principal por espacio (mapeado por accent_color)
+const spaceImages: Record<string, string> = {
+  terra: '/images/estudio-1.jpeg',
+  blue:  '/images/sala-1.jpeg',
+  moss:  '/images/cowork-1.jpeg',
+};
+
 export default function SpaceCard({ space }: { space: Space }) {
   const accent = accentClasses[space.accent_color] || accentClasses.terra;
   const dotColor = dotClasses[space.accent_color] || dotClasses.terra;
   const features = Array.isArray(space.features) ? space.features : [];
+  const imgSrc = spaceImages[space.accent_color] || '/images/cowork-1.jpeg';
 
   return (
-    <article className="bg-bone border rounded-[18px] p-7 flex flex-col transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_-20px_rgba(29,25,22,0.18)]">
-      <div className={`inline-flex items-center gap-2 text-[11.5px] uppercase tracking-[0.16em] mb-3.5 font-medium relative before:content-[''] before:w-5 before:h-px ${accent}`}>
-        {space.tag}
+    <article className="bg-bone border rounded-[18px] overflow-hidden flex flex-col transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_-20px_rgba(29,25,22,0.18)]">
+      {/* Imagen del espacio */}
+      <div className="relative h-[200px] w-full overflow-hidden">
+        <Image
+          src={imgSrc}
+          alt={space.name}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 33vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/20 to-transparent" />
       </div>
+
+      <div className="p-7 flex flex-col flex-1">
+        <div className={`inline-flex items-center gap-2 text-[11.5px] uppercase tracking-[0.16em] mb-3.5 font-medium relative before:content-[''] before:w-5 before:h-px ${accent}`}>
+          {space.tag}
+        </div>
       <h3 className="font-serif font-normal text-[28px] leading-tight tracking-tight mb-3">
         {space.name}
       </h3>
@@ -55,6 +77,7 @@ export default function SpaceCard({ space }: { space: Space }) {
           <path d="M5 12h14M13 5l7 7-7 7" />
         </svg>
       </Link>
+      </div>
     </article>
   );
 }

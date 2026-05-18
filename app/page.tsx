@@ -3,10 +3,10 @@
 // Server Component que carga los espacios desde Supabase
 // ============================================================
 import Link from 'next/link';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import NavBar from '@/components/layout/NavBar';
 import SpaceCard from '@/components/booking/SpaceCard';
-import HeroIllustration from '@/components/layout/HeroIllustration';
 import type { Space } from '@/types/database';
 
 export const revalidate = 60; // Revalidar cada 60s
@@ -64,7 +64,59 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
-        <HeroIllustration />
+        <div className="relative rounded-[28px] overflow-hidden aspect-[3/4] w-full max-md:max-h-[420px]">
+          <Image
+            src="/images/poster-estudio.jpeg"
+            alt="Estudio de contenido — Casa Hidalgo"
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 768px) 100vw, 45vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/30 to-transparent" />
+        </div>
+      </section>
+
+      {/* GALERÍA */}
+      <section id="galeria" className="max-w-[1280px] mx-auto px-9 py-10 max-md:px-5">
+        <div className="flex justify-between items-end mb-8 gap-6">
+          <h2 className="font-serif font-light text-[clamp(26px,3.5vw,42px)] leading-none tracking-tight">
+            El <em className="text-terra not-italic" style={{fontStyle:'italic'}}>lugar</em>.
+          </h2>
+          <div className="text-xs uppercase tracking-[0.18em] text-ink-soft pb-1">/ 00 — Instalaciones</div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 auto-rows-[200px] md:auto-rows-[240px]">
+          {/* Sala de juntas — poster grande */}
+          <div className="relative rounded-2xl overflow-hidden col-span-2 row-span-2">
+            <Image src="/images/poster-sala-1.jpeg" alt="Sala de juntas" fill className="object-cover" sizes="(max-width:768px) 100vw, 50vw" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/50 to-transparent" />
+            <span className="absolute bottom-4 left-5 text-paper font-serif text-lg">Sala de juntas</span>
+          </div>
+          {/* Cowork */}
+          <div className="relative rounded-2xl overflow-hidden">
+            <Image src="/images/cowork-1.jpeg" alt="Cowork" fill className="object-cover" sizes="25vw" />
+          </div>
+          {/* Estudio */}
+          <div className="relative rounded-2xl overflow-hidden">
+            <Image src="/images/estudio-1.jpeg" alt="Estudio de contenido" fill className="object-cover" sizes="25vw" />
+          </div>
+          {/* Cowork 2 */}
+          <div className="relative rounded-2xl overflow-hidden">
+            <Image src="/images/cowork-2.jpeg" alt="Cowork área de trabajo" fill className="object-cover" sizes="25vw" />
+          </div>
+          {/* Gear */}
+          <div className="relative rounded-2xl overflow-hidden">
+            <Image src="/images/estudio-gear-1.jpeg" alt="Equipo estudio" fill className="object-cover" sizes="25vw" />
+          </div>
+          {/* Sala 2 — ancho completo en mobile */}
+          <div className="relative rounded-2xl overflow-hidden col-span-2 md:col-span-1">
+            <Image src="/images/sala-2.jpeg" alt="Sala de juntas detalle" fill className="object-cover" sizes="(max-width:768px) 100vw, 25vw" />
+          </div>
+          {/* Estudio 2 */}
+          <div className="relative rounded-2xl overflow-hidden col-span-2 md:col-span-1">
+            <Image src="/images/estudio-2.jpeg" alt="Estudio detalle" fill className="object-cover" sizes="(max-width:768px) 100vw, 25vw" />
+          </div>
+        </div>
       </section>
 
       {/* SPACES */}
