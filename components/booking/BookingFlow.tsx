@@ -31,7 +31,7 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
 
   const [step, setStep] = useState<Step>(1);
   const [date, setDate] = useState(todayPlus(1));
-  const [time, setTime] = useState('10:00');
+  const [time, setTime] = useState(() => `${String(space.open_hour).padStart(2, '0')}:00`);
   const [hours, setHours] = useState(isCoworking ? 1 : 2);
   const [notes, setNotes] = useState('');
   const [slots, setSlots] = useState<AvailableSlot[] | null>(null);
@@ -86,7 +86,7 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
     setSubmitting(true);
     setSubmitError(null);
 
-    const startsAt = buildMexicoCityISO(date, isCoworking ? '10:00' : time);
+    const startsAt = buildMexicoCityISO(date, isCoworking ? `${String(space.open_hour).padStart(2, '0')}:00` : time);
     const duration_hours = isCoworking ? (hours === 7 ? 56 : 8) : hours;
     const durationMs = isCoworking ? hours * 24 * 60 * 60 * 1000 : hours * 60 * 60 * 1000;
     const endsAt = new Date(new Date(startsAt).getTime() + durationMs).toISOString();

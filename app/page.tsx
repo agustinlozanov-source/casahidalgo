@@ -19,6 +19,12 @@ export default async function HomePage() {
     .eq('is_active', true)
     .order('display_order');
 
+  const spaceList = (spaces as Space[] | null) ?? [];
+  const minOpen  = spaceList.length ? Math.min(...spaceList.map(s => s.open_hour))  : 10;
+  const maxClose = spaceList.length ? Math.max(...spaceList.map(s => s.close_hour)) : 17;
+  const scheduleLabel = `${minOpen}–${maxClose}h`;
+  const minPrice = spaceList.length ? Math.min(...spaceList.map(s => s.base_price)) : 250;
+
   return (
     <>
       <NavBar />
@@ -53,12 +59,12 @@ export default async function HomePage() {
               <div className="text-[11px] uppercase tracking-wider text-ink-soft mt-1">Espacios</div>
             </div>
             <div>
-              <div className="font-serif text-3xl leading-none">10–17h</div>
+              <div className="font-serif text-3xl leading-none">{scheduleLabel}</div>
               <div className="text-[11px] uppercase tracking-wider text-ink-soft mt-1">Lun a Vie</div>
             </div>
             <div>
               <div className="font-serif text-3xl leading-none">
-                $250<span className="text-[13px] text-ink-soft font-sans"> mxn</span>
+                ${minPrice}<span className="text-[13px] text-ink-soft font-sans"> mxn</span>
               </div>
               <div className="text-[11px] uppercase tracking-wider text-ink-soft mt-1">Desde</div>
             </div>
