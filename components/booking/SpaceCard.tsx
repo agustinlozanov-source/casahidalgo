@@ -16,8 +16,8 @@ const dotClasses = {
 
 // Imagen principal por espacio (mapeado por accent_color)
 const spaceImages: Record<string, string> = {
-  terra: '/images/estudio-1.jpeg',
-  blue:  '/images/sala-1.jpeg',
+  terra: '/images/sala-1.jpeg',
+  blue:  '/images/estudio-1.jpeg',
   moss:  '/images/cowork-1.jpeg',
 };
 
