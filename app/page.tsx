@@ -197,8 +197,7 @@ export default async function HomePage() {
                   <span className="text-ink-soft">Sábado – Domingo</span>
                   <span className="text-ink-soft">Cerrado</span>
                 </div>
-              </div>
-            </div>
+              </div>            </div>
             <a
               href="https://maps.app.goo.gl/BVqsZDCZH82w21sU7"
               target="_blank"
