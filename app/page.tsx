@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
 import NavBar from '@/components/layout/NavBar';
 import SpaceCard from '@/components/booking/SpaceCard';
-import type { Space } from '@/types/database';
+import type { Space, BusinessSettings } from '@/types/database';
 
 export const revalidate = 60; // Revalidar cada 60s
 
@@ -20,10 +20,13 @@ export default async function HomePage() {
     .order('display_order');
 
   const spaceList = (spaces as Space[] | null) ?? [];
-  const minOpen  = spaceList.length ? Math.min(...spaceList.map(s => s.open_hour))  : 10;
-  const maxClose = spaceList.length ? Math.max(...spaceList.map(s => s.close_hour)) : 17;
+  const minOpen  = spaceList.length ? Math.min(...spaceList.map(s => s.open_hour))  : 9;
+  const maxClose = spaceList.length ? Math.max(...spaceList.map(s => s.close_hour)) : 18;
   const scheduleLabel = `${minOpen}–${maxClose}h`;
   const minPrice = spaceList.length ? Math.min(...spaceList.map(s => s.base_price)) : 250;
+
+  const { data: bizData } = await supabase.from('business_settings').select('*').eq('id', 1).single();
+  const biz = bizData as BusinessSettings | null;
 
   return (
     <>
@@ -162,7 +165,7 @@ export default async function HomePage() {
           {/* Mapa embed */}
           <div className="relative rounded-2xl overflow-hidden h-[420px] md:h-auto border">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3732.587!2d-100.39194!3d20.58885!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d35b48e7d30001%3A0x1!2sHidalgo+47B%2C+Centro%2C+76000+Santiago+de+Quer%C3%A9taro%2C+Qro.!5e0!3m2!1ses-419!2smx!4v1"
+              src={biz?.maps_embed || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3732.587!2d-100.39194!3d20.58885!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d35b48e7d30001%3A0x1!2sHidalgo+47B%2C+Centro%2C+76000+Santiago+de+Quer%C3%A9taro%2C+Qro.!5e0!3m2!1ses-419!2smx!4v1"}
               width="100%"
               height="100%"
               style={{ border: 0, minHeight: '420px' }}
@@ -178,26 +181,24 @@ export default async function HomePage() {
             <div>
               <div className="text-[11px] uppercase tracking-[0.16em] text-ink-soft mb-4">Dirección</div>
               <p className="font-serif text-[22px] leading-snug">
-                Hidalgo 47B<br />
-                Centro Histórico<br />
-                76000 Querétaro, Qro.
-              </p>
-              <p className="text-ink-soft text-[13px] mt-3 leading-relaxed">
-                Entre Melchor Ocampo<br />y Vicente Guerrero
+                {biz?.address || 'Hidalgo 47B, Centro Histórico, 76000 Querétaro, Qro.'}
               </p>
             </div>
             <div>
               <div className="text-[11px] uppercase tracking-[0.16em] text-ink-soft mb-3">Horarios</div>
               <div className="flex flex-col gap-1.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-ink-soft">Lunes – Viernes</span>
-                  <span className="font-medium">{scheduleLabel}</span>
+                  <span className="text-ink-soft">{biz ? biz.open_time + '–' + biz.close_time : scheduleLabel}</span>
+                  <span className="font-medium">
+                    {biz && biz.open_days.length > 0
+                      ? ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
+                          .filter((_, i) => biz.open_days.includes(['mon','tue','wed','thu','fri','sat','sun'][i]))
+                          .join(', ')
+                      : 'Lun – Vie'}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-ink-soft">Sábado – Domingo</span>
-                  <span className="text-ink-soft">Cerrado</span>
-                </div>
-              </div>            </div>
+              </div>
+            </div>
             <a
               href="https://maps.app.goo.gl/BVqsZDCZH82w21sU7"
               target="_blank"

@@ -112,3 +112,16 @@ export interface Campaign {
   created_at: string;
   updated_at: string;
 }
+
+export interface BusinessSettings {
+  id: number;
+  name: string;
+  email: string;
+  address: string;
+  whatsapp: string;
+  open_time: string;
+  close_time: string;
+  open_days: string[];
+  maps_embed: string | null;
+  updated_at: string;
+}

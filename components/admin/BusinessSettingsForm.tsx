@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-const STORAGE_KEY = 'casa_hidalgo_business_settings';
+import { createClient } from '@/lib/supabase/client';
+import type { BusinessSettings } from '@/types/database';
 
 const DAYS = [
   { key: 'mon', label: 'Lunes' },
@@ -14,83 +14,79 @@ const DAYS = [
   { key: 'sun', label: 'Domingo' },
 ] as const;
 
-interface Settings {
-  name: string;
-  email: string;
-  address: string;
-  whatsapp: string;
-  openTime: string;
-  closeTime: string;
-  days: Record<string, boolean>;
-}
-
-const DEFAULTS: Settings = {
+const DEFAULTS: Omit<BusinessSettings, 'id' | 'updated_at'> = {
   name: 'Casa Hidalgo',
   email: 'hola@casahidalgo.mx',
   address: 'Hidalgo 47B, Centro Histórico, 76000 Querétaro, Qro.',
   whatsapp: '442 285 5151',
-  openTime: '09:00',
-  closeTime: '18:00',
-  days: { mon: true, tue: true, wed: true, thu: true, fri: true, sat: false, sun: false },
+  open_time: '09:00',
+  close_time: '18:00',
+  open_days: ['mon', 'tue', 'wed', 'thu', 'fri'],
+  maps_embed: null,
 };
 
 export default function BusinessSettingsForm() {
-  const [settings, setSettings] = useState<Settings>(DEFAULTS);
-  const [saving, setSaving]     = useState(false);
-  const [success, setSuccess]   = useState(false);
-  const [error, setError]       = useState<string | null>(null);
+  const supabase = createClient();
+  const [fields, setFields] = useState(DEFAULTS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving]   = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setSettings({ ...DEFAULTS, ...JSON.parse(stored) });
-    } catch {}
+    supabase.from('business_settings').select('*').eq('id', 1).single()
+      .then(({ data }) => {
+        if (data) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { id: _id, updated_at: _ua, ...rest } = data as BusinessSettings;
+          setFields({ ...DEFAULTS, ...rest });
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function set<K extends keyof Settings>(key: K, value: Settings[K]) {
-    setSettings(prev => ({ ...prev, [key]: value }));
+  function set<K extends keyof typeof DEFAULTS>(key: K, value: typeof DEFAULTS[K]) {
+    setFields(prev => ({ ...prev, [key]: value }));
   }
 
   function toggleDay(key: string) {
-    setSettings(prev => ({
+    setFields(prev => ({
       ...prev,
-      days: { ...prev.days, [key]: !prev.days[key] },
+      open_days: prev.open_days.includes(key)
+        ? prev.open_days.filter(d => d !== key)
+        : [...prev.open_days, key],
     }));
   }
 
-  function save() {
-    if (!settings.openTime || !settings.closeTime) {
+  async function save() {
+    if (!fields.open_time || !fields.close_time) {
       setError('Ingresa horario de apertura y cierre.');
       return;
     }
-    if (settings.closeTime <= settings.openTime) {
+    if (fields.close_time <= fields.open_time) {
       setError('La hora de cierre debe ser mayor que la de apertura.');
       return;
     }
     setSaving(true);
     setError(null);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 2500);
-    } catch {
-      setError('No se pudo guardar.');
-    } finally {
-      setSaving(false);
-    }
+    const { error: err } = await supabase
+      .from('business_settings')
+      .upsert({ id: 1, ...fields });
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 2500);
   }
 
-  function discard() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      setSettings(stored ? { ...DEFAULTS, ...JSON.parse(stored) } : DEFAULTS);
-    } catch {
-      setSettings(DEFAULTS);
-    }
-    setError(null);
-  }
+  const activeDayLabels = DAYS.filter(d => fields.open_days.includes(d.key)).map(d => d.label);
 
-  const activeDays = DAYS.filter(d => settings.days[d.key]).map(d => d.label);
+  if (loading) return (
+    <div className="bg-bone border rounded-2xl p-6 text-center text-ink-soft text-sm">
+      <span className="loader inline-block mr-2" />Cargando configuración…
+    </div>
+  );
 
   return (
     <div className="bg-bone border rounded-2xl p-6">
@@ -100,25 +96,35 @@ export default function BusinessSettingsForm() {
       </p>
 
       {error   && <div className="alert alert-error mb-4">{error}</div>}
-      {success && <div className="alert alert-success mb-4">✓ Cambios guardados</div>}
+      {success && <div className="alert alert-success mb-4">✓ Cambios guardados y reflejados en el sitio</div>}
 
       {/* Datos generales */}
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <div className="flex flex-col gap-1.5">
           <label className="form-label">Nombre comercial</label>
-          <input value={settings.name} onChange={e => set('name', e.target.value)} className="form-input" />
+          <input value={fields.name} onChange={e => set('name', e.target.value)} className="form-input" />
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="form-label">Email de contacto</label>
-          <input type="email" value={settings.email} onChange={e => set('email', e.target.value)} className="form-input" />
+          <input type="email" value={fields.email} onChange={e => set('email', e.target.value)} className="form-input" />
         </div>
         <div className="flex flex-col gap-1.5 md:col-span-2">
           <label className="form-label">Dirección</label>
-          <input value={settings.address} onChange={e => set('address', e.target.value)} className="form-input" />
+          <input value={fields.address} onChange={e => set('address', e.target.value)} className="form-input" />
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="form-label">WhatsApp</label>
-          <input value={settings.whatsapp} onChange={e => set('whatsapp', e.target.value)} className="form-input" />
+          <input value={fields.whatsapp} onChange={e => set('whatsapp', e.target.value)} className="form-input" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="form-label">Embed Google Maps</label>
+          <input
+            value={fields.maps_embed || ''}
+            onChange={e => set('maps_embed', e.target.value || null)}
+            placeholder="https://www.google.com/maps/embed?pb=…"
+            className="form-input text-[12px]"
+          />
+          <span className="text-[11px] text-ink-soft">Pega aquí el src del iframe desde Google Maps → Compartir → Insertar mapa</span>
         </div>
       </div>
 
@@ -130,8 +136,8 @@ export default function BusinessSettingsForm() {
             <label className="text-[11.5px] text-ink-soft">Apertura</label>
             <input
               type="time"
-              value={settings.openTime}
-              onChange={e => set('openTime', e.target.value)}
+              value={fields.open_time}
+              onChange={e => set('open_time', e.target.value)}
               className="form-input"
             />
           </div>
@@ -139,8 +145,8 @@ export default function BusinessSettingsForm() {
             <label className="text-[11.5px] text-ink-soft">Cierre</label>
             <input
               type="time"
-              value={settings.closeTime}
-              onChange={e => set('closeTime', e.target.value)}
+              value={fields.close_time}
+              onChange={e => set('close_time', e.target.value)}
               className="form-input"
             />
           </div>
@@ -157,7 +163,7 @@ export default function BusinessSettingsForm() {
               type="button"
               onClick={() => toggleDay(key)}
               className={`px-3 py-1.5 rounded-lg text-[13px] font-medium border transition-colors ${
-                settings.days[key]
+                fields.open_days.includes(key)
                   ? 'bg-ink text-paper border-ink'
                   : 'bg-paper text-ink-soft border-strong hover:border-ink'
               }`}
@@ -166,15 +172,14 @@ export default function BusinessSettingsForm() {
             </button>
           ))}
         </div>
-        {activeDays.length > 0 && (
+        {activeDayLabels.length > 0 && (
           <p className="text-[11.5px] text-ink-soft mt-2">
-            Visible en el sitio: {activeDays.join(', ')} · {settings.openTime}–{settings.closeTime}
+            Visible en el sitio: {activeDayLabels.join(', ')} · {fields.open_time}–{fields.close_time}
           </p>
         )}
       </div>
 
       <div className="flex justify-end gap-2.5 border-t pt-4">
-        <button onClick={discard} disabled={saving} className="btn btn-ghost">Descartar</button>
         <button onClick={save} disabled={saving} className="btn btn-primary">
           {saving ? <><span className="loader" /> Guardando…</> : 'Guardar cambios'}
         </button>
