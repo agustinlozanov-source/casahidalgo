@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import NavBar from '@/components/layout/NavBar';
 import { formatDate, formatTime, formatMoney, translateStatus } from '@/lib/utils';
 import type { Booking } from '@/types/database';
+import DownloadComprobanteButton from '@/components/booking/DownloadComprobanteButton';
 
 export default async function MisReservasPage() {
   const supabase = await createClient();
@@ -75,8 +76,7 @@ function BookingRow({ booking: b }: { booking: Booking }) {
       </div>
       <div className="flex flex-col items-end gap-2 max-md:items-start">
         <span className={`pill ${statusClass}`}>{translateStatus(b.status)}</span>
-        <div className="font-serif text-[22px] font-medium">{formatMoney(b.total_cents)}</div>
-      </div>
+        <div className="font-serif text-[22px] font-medium">{formatMoney(b.total_cents)}</div>        <DownloadComprobanteButton bookingId={b.id} folio={b.folio} variant="small" label="📄 PDF" />      </div>
     </div>
   );
 }

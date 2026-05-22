@@ -43,7 +43,7 @@ export default function BusinessSettingsForm() {
         }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .then(undefined, () => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils';
 import type { Booking } from '@/types/database';
 import NavBar from '@/components/layout/NavBar';
+import DownloadComprobanteButton from '@/components/booking/DownloadComprobanteButton';
 
 interface Props {
   searchParams: Promise<{
@@ -77,8 +78,14 @@ export default async function PagoExitoPage({ searchParams }: Props) {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2.5">
-                <Link href="/mis-reservas" className="btn btn-primary btn-full">Ver mis reservas</Link>
+              <DownloadComprobanteButton 
+                bookingId={booking.id} 
+                folio={booking.folio}
+                variant="primary"
+                label="📄 Descargar comprobante"
+              />
+              <div className="flex gap-2.5 mt-3">
+                <Link href="/mis-reservas" className="btn btn-ghost btn-full">Ver mis reservas</Link>
                 <Link href="/" className="btn btn-ghost btn-full">Inicio</Link>
               </div>
             </>
