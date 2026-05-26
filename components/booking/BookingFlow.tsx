@@ -13,6 +13,8 @@ import {
   buildMexicoCityISO,
   todayPlus,
   translateStatus,
+  isDayOpen,
+  dayName,
 } from '@/lib/utils';
 
 type Step = 1 | 2 | 3 | 4; // 4 = confirmación
@@ -34,6 +36,7 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
   const [time, setTime] = useState(() => `${String(space.open_hour).padStart(2, '0')}:00`);
   const [hours, setHours] = useState(isCoworking ? 1 : 2);
   const [notes, setNotes] = useState('');
+  const [openDays, setOpenDays] = useState<string[]>(['mon','tue','wed','thu','fri','sat','sun']); // fallback: todos
   const [slots, setSlots] = useState<AvailableSlot[] | null>(null);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
@@ -44,6 +47,13 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const { subtotal_cents, tax_cents, total_cents } = calculatePrice(space, hours);
+
+  // Cargar open_days de business_settings al montar
+  useEffect(() => {
+    supabase.from('business_settings').select('open_days').eq('id', 1).single()
+      .then(({ data }) => { if (data?.open_days) setOpenDays(data.open_days); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Cargar slots cuando entras al paso 2 o cambias fecha
   useEffect(() => {
@@ -86,8 +96,16 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
     setSubmitting(true);
     setSubmitError(null);
 
+    // Doble-check backend: rechazar si el día no está habilitado
+    if (!isDayOpen(date, openDays)) {
+      setSubmitError(`Los ${dayName(date)}s no están disponibles. Elige otra fecha.`);
+      setSubmitting(false);
+      return;
+    }
+
     const startsAt = buildMexicoCityISO(date, isCoworking ? `${String(space.open_hour).padStart(2, '0')}:00` : time);
-    const duration_hours = isCoworking ? (hours === 7 ? 56 : 8) : hours;
+    const pkgDays = space.package_days ?? 5;
+    const duration_hours = isCoworking ? (hours === pkgDays ? pkgDays * 8 : 8) : hours;
     const durationMs = isCoworking ? hours * 24 * 60 * 60 * 1000 : hours * 60 * 60 * 1000;
     const endsAt = new Date(new Date(startsAt).getTime() + durationMs).toISOString();
 
@@ -259,6 +277,7 @@ export default function BookingFlow({ space, profile, userId, userEmail }: Props
           slotsLoading={slotsLoading}
           slotsError={slotsError}
           subtotalLabel={formatMoney(subtotal_cents)}
+          openDays={openDays}
           onDateChange={setDate}
           onTimeChange={setTime}
           onHoursChange={setHours}
@@ -357,6 +376,7 @@ interface Step2Props {
   slotsLoading: boolean;
   slotsError: string | null;
   subtotalLabel: string;
+  openDays: string[];
   onDateChange: (d: string) => void;
   onTimeChange: (t: string) => void;
   onHoursChange: (h: number) => void;
@@ -366,9 +386,13 @@ interface Step2Props {
 
 function Step2({
   space, date, time, hours, slots, slotsLoading, slotsError,
-  subtotalLabel, onDateChange, onTimeChange, onHoursChange, onBack, onNext,
+  subtotalLabel, openDays, onDateChange, onTimeChange, onHoursChange, onBack, onNext,
 }: Step2Props) {
   const isCoworking = space.pricing_model === 'daily';
+  const dayBlocked = !isDayOpen(date, openDays);
+  const dayBlockedMsg = dayBlocked
+    ? `Los ${dayName(date)}s no están disponibles. Elige otro día.`
+    : null;
 
   return (
     <>
@@ -386,7 +410,7 @@ function Step2({
           {isCoworking ? (
             <select value={hours} onChange={(e) => onHoursChange(parseInt(e.target.value, 10))} className="form-input">
               <option value={1}>Day Pass — 1 día (${space.base_price})</option>
-              <option value={7}>Paquete 7 días (${space.extra_price})</option>
+              <option value={space.package_days ?? 5}>Paquete {space.package_days ?? 5} días (${space.extra_price})</option>
             </select>
           ) : (
             <select value={hours} onChange={(e) => onHoursChange(parseInt(e.target.value, 10))} className="form-input">
@@ -454,14 +478,18 @@ function Step2({
         {!isCoworking && <SummaryRow label="Hora" value={time} />}
         <SummaryRow
           label="Duración"
-          value={isCoworking ? (hours === 7 ? '7 días' : '1 día') : `${hours} ${hours === 1 ? 'hora' : 'horas'}`}
+          value={isCoworking ? (hours === (space.package_days ?? 5) ? `${space.package_days ?? 5} días` : '1 día') : `${hours} ${hours === 1 ? 'hora' : 'horas'}`}
         />
         <SummaryRow label="Subtotal" value={subtotalLabel} total />
       </div>
 
+      {dayBlockedMsg && (
+        <div className="alert alert-error mb-3">📅 {dayBlockedMsg}</div>
+      )}
+
       <div className="flex justify-between">
         <button onClick={onBack} className="btn btn-ghost">Atrás</button>
-        <button onClick={onNext} className="btn btn-primary btn-large" disabled={!isCoworking && !time}>
+        <button onClick={onNext} className="btn btn-primary btn-large" disabled={dayBlocked || (!isCoworking && !time)}>
           Continuar →
         </button>
       </div>
@@ -498,7 +526,7 @@ function Step3({
         {!isCoworking && <SummaryRow label="Hora" value={time} />}
         <SummaryRow
           label="Duración"
-          value={isCoworking ? (hours === 7 ? 'Paquete 7 días' : 'Day Pass · 1 día') : `${hours} ${hours === 1 ? 'hora' : 'horas'}`}
+          value={isCoworking ? (hours === (space.package_days ?? 5) ? `Paquete ${space.package_days ?? 5} días` : 'Day Pass · 1 día') : `${hours} ${hours === 1 ? 'hora' : 'horas'}`}
         />
         <SummaryRow label="Subtotal" value={formatMoney(subtotal_cents)} />
         <SummaryRow label="IVA (16%)" value={formatMoney(tax_cents)} />

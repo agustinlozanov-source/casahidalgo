@@ -42,6 +42,7 @@ export default function SpaceEditor({ space }: Props) {
   const [openTime, setOpenTime]     = useState(hourToTime(space.open_hour));
   const [closeTime, setCloseTime]   = useState(hourToTime(space.close_hour));
   const [isActive, setIsActive]     = useState(space.is_active);
+  const [packageDays, setPackageDays] = useState(space.package_days ?? 5);
 
   // Días operativos — default Lun-Vie
   const [days, setDays] = useState<Record<string, boolean>>({
@@ -65,12 +66,13 @@ export default function SpaceEditor({ space }: Props) {
     const { error: err } = await supabase
       .from('spaces')
       .update({
-        base_price:  basePrice,
-        extra_price: extraPrice,
+        base_price:   basePrice,
+        extra_price:  extraPrice,
         capacity,
-        open_hour:   newOpenHour,
-        close_hour:  newCloseHour,
-        is_active:   isActive,
+        open_hour:    newOpenHour,
+        close_hour:   newCloseHour,
+        is_active:    isActive,
+        package_days: packageDays,
       })
       .eq('id', space.id);
     setSaving(false);
@@ -137,6 +139,21 @@ export default function SpaceEditor({ space }: Props) {
               />
             </div>
           </div>
+
+          {/* Días de paquete (solo modelos por día) */}
+          {space.pricing_model === 'daily' && (
+            <div className="flex flex-col gap-1.5">
+              <label className="form-label">Días del paquete multi-día</label>
+              <input
+                type="number" min="2" max="30" value={packageDays}
+                onChange={(e) => setPackageDays(parseInt(e.target.value, 10) || 5)}
+                className="form-input max-w-[160px]"
+              />
+              <p className="text-[11.5px] text-ink-soft">
+                El paquete se ofrece como "{packageDays} días" al precio extra configurado.
+              </p>
+            </div>
+          )}
 
           {/* Horario */}
           <div>

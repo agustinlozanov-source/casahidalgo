@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -12,15 +12,20 @@ import {
 } from '@/lib/utils';
 import type { Booking, BookingStatus } from '@/types/database';
 
+type SortKey = 'starts_at' | 'created_at' | 'total_cents' | 'folio';
+type SortDir = 'asc' | 'desc';
+
 interface Props {
   bookings: Booking[];
   counts: Record<string, number>;
   currentStatus: string;
   currentSearch: string;
+  currentDateFrom: string;
+  currentDateTo: string;
 }
 
 export default function ReservasTable({
-  bookings, counts, currentStatus, currentSearch,
+  bookings, counts, currentStatus, currentSearch, currentDateFrom, currentDateTo,
 }: Props) {
   const router = useRouter();
   const supabase = createClient();
@@ -28,13 +33,46 @@ export default function ReservasTable({
   const [isPending, startTransition] = useTransition();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>('created_at');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [dateFrom, setDateFrom] = useState(currentDateFrom);
+  const [dateTo, setDateTo] = useState(currentDateTo);
 
-  // Búsqueda reactiva: navega automáticamente 350ms después de dejar de escribir
+  const sorted = useMemo(() => {
+    return [...bookings].sort((a, b) => {
+      const av: string | number =
+        sortKey === 'total_cents' ? a.total_cents :
+        sortKey === 'folio'       ? a.folio :
+        sortKey === 'created_at'  ? a.created_at :
+        a.starts_at;
+      const bv: string | number =
+        sortKey === 'total_cents' ? b.total_cents :
+        sortKey === 'folio'       ? b.folio :
+        sortKey === 'created_at'  ? b.created_at :
+        b.starts_at;
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [bookings, sortKey, sortDir]);
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir('desc');
+    }
+  }
+
+  // Búsqueda reactiva
   useEffect(() => {
     const timer = setTimeout(() => {
       const params = new URLSearchParams();
       if (currentStatus !== 'all') params.set('status', currentStatus);
       if (searchInput.trim()) params.set('q', searchInput.trim());
+      if (dateFrom) params.set('date_from', dateFrom);
+      if (dateTo) params.set('date_to', dateTo);
       const qs = params.toString();
       startTransition(() => {
         router.push(`/admin/reservas${qs ? '?' + qs : ''}`);
@@ -44,10 +82,29 @@ export default function ReservasTable({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchInput]);
 
+  // Filtro de fechas reactivo
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (currentStatus !== 'all') params.set('status', currentStatus);
+      if (currentSearch) params.set('q', currentSearch);
+      if (dateFrom) params.set('date_from', dateFrom);
+      if (dateTo) params.set('date_to', dateTo);
+      const qs = params.toString();
+      startTransition(() => {
+        router.push(`/admin/reservas${qs ? '?' + qs : ''}`);
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateFrom, dateTo]);
+
   function changeFilter(status: string) {
     const params = new URLSearchParams();
     if (status !== 'all') params.set('status', status);
     if (currentSearch) params.set('q', currentSearch);
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
     startTransition(() => {
       router.push(`/admin/reservas${params.toString() ? '?' + params.toString() : ''}`);
     });
@@ -82,12 +139,12 @@ export default function ReservasTable({
   }
 
   function handleExport() {
-    if (bookings.length === 0) {
+    if (sorted.length === 0) {
       showToast('No hay reservas para exportar', 'error');
       return;
     }
-    const headers = ['Folio', 'Cliente', 'Email', 'Teléfono', 'Espacio', 'Fecha inicio', 'Fecha fin', 'Duración (h)', 'Subtotal', 'IVA', 'Total', 'Estado', 'Notas', 'Creada'];
-    const rows = bookings.map(b => [
+    const headers = ['Folio', 'Cliente', 'Email', 'Teléfono', 'Espacio', 'Fecha reserva', 'Fecha fin', 'Duración (h)', 'Subtotal', 'IVA', 'Total', 'Estado', 'Notas', 'Creada en'];
+    const rows = sorted.map(b => [
       b.folio,
       escapeCsv(b.customer_name),
       escapeCsv(b.customer_email),
@@ -101,7 +158,7 @@ export default function ReservasTable({
       (b.total_cents / 100).toString(),
       translateStatus(b.status),
       escapeCsv(b.notes || ''),
-      formatDate(b.created_at),
+      formatDate(b.created_at) + ' ' + formatTime(b.created_at),
     ]);
     const csv = '\uFEFF' + [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -112,7 +169,7 @@ export default function ReservasTable({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast(`${bookings.length} reservas exportadas`, 'success');
+    showToast(`${sorted.length} reservas exportadas`, 'success');
   }
 
   const filters: { id: string; label: string }[] = [
@@ -124,7 +181,31 @@ export default function ReservasTable({
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
+      {/* Filtro de rango de fechas */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-[11px] uppercase tracking-wider text-ink-soft whitespace-nowrap">Fecha de reserva:</span>
+        <input
+          type="date" value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="form-input py-1.5 px-2.5 text-[13px] w-[160px]"
+        />
+        <span className="text-ink-soft text-sm">—</span>
+        <input
+          type="date" value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="form-input py-1.5 px-2.5 text-[13px] w-[160px]"
+        />
+        {(dateFrom || dateTo) && (
+          <button
+            onClick={() => { setDateFrom(''); setDateTo(''); }}
+            className="text-[12px] text-ink-soft hover:text-ink px-2 py-1 rounded hover:bg-stone transition-colors"
+          >
+            ✕ Limpiar fechas
+          </button>
+        )}
+      </div>
+
       {/* Filters bar */}
       <div className="flex justify-between items-center gap-4 flex-wrap">
         <div className="flex gap-1 bg-stone rounded-full p-1 overflow-x-auto">
@@ -185,7 +266,7 @@ export default function ReservasTable({
             Actualizando…
           </div>
         )}
-        {bookings.length === 0 ? (
+        {sorted.length === 0 ? (
           <div className="text-center py-14 text-ink-soft">
             <h3 className="font-serif text-xl mb-2 text-ink">Sin reservas</h3>
             <p className="text-sm">
@@ -196,21 +277,22 @@ export default function ReservasTable({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[900px]">
+            <table className="w-full text-sm min-w-[1040px]">
               <thead>
                 <tr className="border-b bg-stone/50">
-                  <Th>Folio</Th>
+                  <Th sk="folio" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Folio</Th>
                   <Th>Cliente</Th>
                   <Th>Espacio</Th>
-                  <Th>Fecha / Hora</Th>
-                  <Th>Duración</Th>
-                  <Th>Total</Th>
+                  <Th sk="starts_at" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Fecha reserva</Th>
+                  <Th>Dur.</Th>
+                  <Th sk="total_cents" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Total</Th>
                   <Th>Estado</Th>
+                  <Th sk="created_at" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort}>Creada</Th>
                   <Th align="right">Acciones</Th>
                 </tr>
               </thead>
               <tbody>
-                {bookings.map(b => (
+                {sorted.map(b => (
                   <tr key={b.id} className="border-b last:border-0 hover:bg-ink/[0.025] transition-colors">
                     <td className="py-3.5 px-3.5 font-mono text-[12px] text-ink-soft whitespace-nowrap">
                       <Link href={`/admin/reservas/${b.id}`} className="hover:text-ink hover:underline">
@@ -221,15 +303,19 @@ export default function ReservasTable({
                       <div className="font-medium text-[14px]">{b.customer_name}</div>
                       <div className="text-[11.5px] text-ink-soft">{b.customer_email}</div>
                     </td>
-                    <td className="py-3.5 px-3.5">{b.spaces?.name || b.space_id}</td>
+                    <td className="py-3.5 px-3.5 whitespace-nowrap">{b.spaces?.name || b.space_id}</td>
                     <td className="py-3.5 px-3.5 font-mono text-[13px] whitespace-nowrap">
                       {formatDate(b.starts_at)}<br/>
                       <span className="text-ink-soft">{formatTime(b.starts_at)}</span>
                     </td>
-                    <td className="py-3.5 px-3.5 whitespace-nowrap">{b.duration_hours}h</td>
+                    <td className="py-3.5 px-3.5 whitespace-nowrap text-ink-soft">{b.duration_hours}h</td>
                     <td className="py-3.5 px-3.5 font-medium whitespace-nowrap">{formatMoney(b.total_cents)}</td>
                     <td className="py-3.5 px-3.5">
                       <span className={`pill pill-${b.status}`}>{translateStatus(b.status)}</span>
+                    </td>
+                    <td className="py-3.5 px-3.5 font-mono text-[12px] text-ink-soft whitespace-nowrap">
+                      {formatDate(b.created_at)}<br/>
+                      <span>{formatTime(b.created_at)}</span>
                     </td>
                     <td className="py-3.5 px-3.5 text-right whitespace-nowrap">
                       {updatingId === b.id ? (
@@ -288,10 +374,32 @@ export default function ReservasTable({
   );
 }
 
-function Th({ children, align = 'left' }: { children: React.ReactNode; align?: 'left' | 'right' }) {
+function Th({
+  children, align = 'left', sk, sortKey: currentSortKey, sortDir: currentSortDir, onSort,
+}: {
+  children: React.ReactNode;
+  align?: 'left' | 'right';
+  sk?: SortKey;
+  sortKey?: SortKey;
+  sortDir?: SortDir;
+  onSort?: (k: SortKey) => void;
+}) {
+  const isActive = sk !== undefined && currentSortKey === sk;
   return (
-    <th className={`py-3 px-3.5 text-[11px] uppercase tracking-wider text-ink-soft font-medium text-${align}`}>
-      {children}
+    <th
+      onClick={() => sk && onSort?.(sk)}
+      className={`py-3 px-3.5 text-[11px] uppercase tracking-wider text-ink-soft font-medium text-${align} ${
+        sk ? 'cursor-pointer hover:text-ink select-none' : ''
+      }`}
+    >
+      <span className={`inline-flex items-center gap-1 ${align === 'right' ? 'justify-end w-full' : ''}`}>
+        {children}
+        {sk && (
+          <span className={`transition-opacity ${isActive ? 'opacity-100' : 'opacity-20'}`}>
+            {isActive && currentSortDir === 'asc' ? '↑' : '↓'}
+          </span>
+        )}
+      </span>
     </th>
   );
 }

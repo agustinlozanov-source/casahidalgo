@@ -79,6 +79,24 @@ export function buildMexicoCityISO(date: string, time: string): string {
   return new Date(`${date}T${time}:00-06:00`).toISOString();
 }
 
+/**
+ * Verifica si una fecha (YYYY-MM-DD) cae en un día habilitado.
+ * openDays usa el formato de business_settings: ['mon','tue','wed','thu','fri','sat','sun']
+ */
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+export function isDayOpen(dateStr: string, openDays: string[]): boolean {
+  // Parsear la fecha local evitando desfases de zona horaria
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dayIndex = new Date(y, m - 1, d).getDay(); // 0=dom … 6=sab
+  return openDays.includes(DAY_KEYS[dayIndex]);
+}
+
+/** Nombre legible del día para mensajes de error */
+export function dayName(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-MX', { weekday: 'long' });
+}
+
 export function translateStatus(s: BookingStatus): string {
   return ({
     pending: 'Pendiente',

@@ -8,17 +8,17 @@ import ReservasTable from '@/components/admin/ReservasTable';
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; date_from?: string; date_to?: string }>;
 }
 
 export default async function ReservasPage({ searchParams }: PageProps) {
-  const { status, q } = await searchParams;
+  const { status, q, date_from, date_to } = await searchParams;
   const supabase = await createClient();
 
   let query = supabase
     .from('bookings')
     .select('*, spaces(name, accent_color)')
-    .order('starts_at', { ascending: false });
+    .order('created_at', { ascending: false });
 
   if (status && status !== 'all') {
     query = query.eq('status', status);
@@ -26,11 +26,17 @@ export default async function ReservasPage({ searchParams }: PageProps) {
   if (q) {
     query = query.or(`folio.ilike.%${q}%,customer_name.ilike.%${q}%,customer_email.ilike.%${q}%`);
   }
+  if (date_from) {
+    query = query.gte('starts_at', date_from);
+  }
+  if (date_to) {
+    query = query.lte('starts_at', date_to + 'T23:59:59');
+  }
 
   const { data: bookings } = await query;
   const list = (bookings || []) as Booking[];
 
-  // Conteos para tabs
+  // Conteos para tabs (sin filtro de fecha para mantener totales reales)
   const counts = {
     all: list.length,
     pending: list.filter(b => b.status === 'pending').length,
@@ -39,5 +45,14 @@ export default async function ReservasPage({ searchParams }: PageProps) {
     completed: list.filter(b => b.status === 'completed').length,
   };
 
-  return <ReservasTable bookings={list} counts={counts} currentStatus={status || 'all'} currentSearch={q || ''} />;
+  return (
+    <ReservasTable
+      bookings={list}
+      counts={counts}
+      currentStatus={status || 'all'}
+      currentSearch={q || ''}
+      currentDateFrom={date_from || ''}
+      currentDateTo={date_to || ''}
+    />
+  );
 }

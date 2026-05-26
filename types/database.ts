@@ -39,6 +39,7 @@ export interface Space {
   features: string[];
   open_hour: number;
   close_hour: number;
+  package_days: number;     // días del paquete multi-día (default 5)
   is_active: boolean;
   display_order: number;
   created_at: string;
